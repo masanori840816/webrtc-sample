@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>WebRTC Sample</title>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <input type="text" id="user_name">
+        <button onclick="Page.connect()">Connect</button>
+        <input type="text" id="message">
+        <button onclick="Page.send()">Send Message</button>
+        <button onclick="Page.sendDataChannel()">Send by DataChannel</button>
+        <button onclick="Page.close()">Close</button>
+        <div id="received_message"></div>
+        <script src="{{.}}/js/main.page.js"></script>
+        <script>Page.init('{{.}}');</script>
+    </body>
+</html>

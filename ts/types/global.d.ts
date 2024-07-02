@@ -4,7 +4,9 @@ declare global {
     };
 }
 export interface MainPageApi {
+    init: (baseUrl: string) => void,
     connect: () => void,
     send: () => void,
     close: () => void,
+    sendDataChannel: () => void,
 }

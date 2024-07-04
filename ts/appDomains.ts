@@ -7,9 +7,9 @@ export function getWebSocketAddress() {
     }
 
     if(location.protocol === "https:") {
-        return `wss://${location.hostname}${port}/webrtc`;
+        return `wss://${location.hostname}${port}/webrtc/websocket`;
     }
-    return `ws://${location.hostname}${port}/webrtc`;
+    return `ws://${location.hostname}${port}/webrtc/websocket`;
 }
 export function getBaseAddress() {
     let port = location.port;

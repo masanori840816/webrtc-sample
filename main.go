@@ -27,10 +27,11 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	serverUrl := "https://nginx.sample.jp/webrtc"
 	target := getStrippingTargetPrefix(serverUrl)
-	http.Handle(fmt.Sprintf("/%s/css/", target), http.StripPrefix(fmt.Sprintf("/%s", target), http.FileServer(http.Dir("templates"))))
-	http.Handle(fmt.Sprintf("/%s/js/", target), http.StripPrefix(fmt.Sprintf("/%s", target), http.FileServer(http.Dir("templates"))))
 
-	http.HandleFunc("/websocket", websocketHandler)
+	http.Handle(fmt.Sprintf("%s/css/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
+	http.Handle(fmt.Sprintf("%s/js/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
+
+	http.HandleFunc(fmt.Sprintf("%s/websocket", target), websocketHandler)
 	http.Handle("/", &templateHandler{filename: "index.html", serverUrl: serverUrl})
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
@@ -42,7 +43,7 @@ func getStrippingTargetPrefix(url string) string {
 	}
 	for i := len(sURL) - 1; i >= 3; i-- {
 		if sURL[i] != "" {
-			return sURL[i]
+			return fmt.Sprintf("/%s", sURL[i])
 		}
 	}
 	return ""

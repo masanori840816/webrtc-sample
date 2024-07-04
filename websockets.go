@@ -31,6 +31,8 @@ type threadSafeWriter struct {
 }
 
 func websocketHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("aaaa")
+	log.Println(r.URL)
 	unsafeConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)

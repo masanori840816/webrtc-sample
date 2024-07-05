@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -23,6 +24,7 @@ type websocketMessage struct {
 	Data        string `json:"data"`
 }
 type connectionState struct {
+	userName  string
 	websocket *threadSafeWriter
 }
 type threadSafeWriter struct {
@@ -31,8 +33,11 @@ type threadSafeWriter struct {
 }
 
 func websocketHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("aaaa")
-	log.Println(r.URL)
+	user, err := getParam(r, "user")
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	unsafeConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -42,7 +47,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 	// Close the connection when the for-loop operation is finished.
 	defer conn.Close()
 	listLock.Lock()
-	connections = append(connections, connectionState{websocket: conn})
+	connections = append(connections, connectionState{userName: user, websocket: conn})
 	listLock.Unlock()
 
 	message := &websocketMessage{}
@@ -56,6 +61,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for _, c := range connections {
+			if c.userName == user {
+				continue
+			}
 			c.websocket.WriteJSON(message)
 		}
 	}
@@ -65,4 +73,11 @@ func (t *threadSafeWriter) WriteJSON(v interface{}) error {
 	defer t.Unlock()
 
 	return t.Conn.WriteJSON(v)
+}
+func getParam(r *http.Request, key string) (string, error) {
+	result := r.URL.Query().Get(key)
+	if len(result) <= 0 {
+		return "", fmt.Errorf("no value: %s", key)
+	}
+	return result, nil
 }

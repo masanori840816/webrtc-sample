@@ -6,7 +6,8 @@ export class WebSockets {
     private onReceived: ((data: WebsocketMessage) => void) | null = null;
     public connect() {
         const wsUrl = domains.getWebSocketAddress();
-        this.ws = new WebSocket(wsUrl);
+        const userElm = document.getElementById("user_name") as HTMLInputElement;
+        this.ws = new WebSocket(`${wsUrl}?user=${userElm.value}`);
         this.ws.onopen = () => this.sendMessage({
             messageType: "text",
             data: "connected",

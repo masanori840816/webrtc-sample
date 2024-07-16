@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"strings"
 	"sync"
 )
 
@@ -25,26 +24,13 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	serverUrl := "https://nginx.sample.jp/webrtc"
-	target := getStrippingTargetPrefix(serverUrl)
+	serverUrl := "https://goapp.sample.jp/webrtc"
+	target := "/webrtc"
 
 	http.Handle(fmt.Sprintf("%s/css/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
 	http.Handle(fmt.Sprintf("%s/js/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
 
 	http.HandleFunc(fmt.Sprintf("%s/websocket", target), websocketHandler)
 	http.Handle("/", &templateHandler{filename: "index.html", serverUrl: serverUrl})
-	log.Fatal(http.ListenAndServe("localhost:8080", nil))
-}
-
-func getStrippingTargetPrefix(url string) string {
-	sURL := strings.Split(url, "/")
-	if len(sURL) <= 3 {
-		return ""
-	}
-	for i := len(sURL) - 1; i >= 3; i-- {
-		if sURL[i] != "" {
-			return fmt.Sprintf("/%s", sURL[i])
-		}
-	}
-	return ""
+	log.Fatal(http.ListenAndServe("localhost:8083", nil))
 }

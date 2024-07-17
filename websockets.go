@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -50,13 +49,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 	connections = append(connections, connectionState{userName: user, websocket: conn})
 	listLock.Unlock()
 
-	message := &websocketMessage{}
 	for {
-		_, raw, err := conn.ReadMessage()
+		messageType, raw, err := conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
-			return
-		} else if err := json.Unmarshal(raw, &message); err != nil {
 			log.Println(err)
 			return
 		}
@@ -64,15 +59,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 			if c.userName == user {
 				continue
 			}
-			c.websocket.WriteJSON(message)
+			c.websocket.WriteMessage(messageType, raw)
 		}
 	}
-}
-func (t *threadSafeWriter) WriteJSON(v interface{}) error {
-	t.Lock()
-	defer t.Unlock()
-
-	return t.Conn.WriteJSON(v)
 }
 func getParam(r *http.Request, key string) (string, error) {
 	result := r.URL.Query().Get(key)

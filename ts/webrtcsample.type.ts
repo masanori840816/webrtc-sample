@@ -1,5 +1,5 @@
 export type WebsocketMessage = {
-    messageType: "text"
+    type: "text"
     data: string|Blob|ArrayBuffer,
 }
 export type SdpMessage = {

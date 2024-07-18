@@ -1,19 +1,19 @@
-import { WebsocketMessage } from "./webrtcsample.type";
+import { CandidateMessage, SdpMessage, WebsocketMessage } from "./webrtcsample.type";
 import * as domains from "./appDomains";
 
 export class WebSockets {
     private ws: WebSocket|null = null;
-    private onReceived: ((data: WebsocketMessage) => void) | null = null;
+    private onReceived: ((data: WebsocketMessage|SdpMessage|CandidateMessage) => void) | null = null;
     public connect() {
         const wsUrl = domains.getWebSocketAddress();
         const userElm = document.getElementById("user_name") as HTMLInputElement;
         this.ws = new WebSocket(`${wsUrl}?user=${userElm.value}`);
         this.ws.onopen = () => this.sendMessage({
-            messageType: "text",
+            type: "text",
             data: "connected",
         });
         this.ws.onmessage = data => {
-            const message = <WebsocketMessage>JSON.parse(data.data);
+            const message = JSON.parse(data.data);
             if(message == null) {
                 console.warn("Failed receiving a message");
                 console.log(data);                
@@ -25,10 +25,10 @@ export class WebSockets {
         };
         
     }
-    public addEvents(onReceived: (data: WebsocketMessage) => void) {
+    public addEvents(onReceived: (data: WebsocketMessage|SdpMessage|CandidateMessage) => void) {
         this.onReceived = onReceived;
     }
-    public sendMessage(message: WebsocketMessage) {
+    public sendMessage(message: WebsocketMessage|SdpMessage|CandidateMessage) {
         console.log("sendmessage " + message);
         
         if (this.ws == null) {

@@ -1,15 +1,5 @@
-export type WebSocketMessage = {
-    type: "text"
-    data: string|Blob|ArrayBuffer,
-}
-export type SdpMessage = {
-    type: "video-offer" | "video-answer",
-    sdp: RTCSessionDescription
-}
-export type CandidateMessage = {
-    type: "new-ice-candidate",
-    candidate: RTCIceCandidateInit|null
-}
+import { CandidateMessage, SdpMessage, WebSocketMessage } from "./webrtcsample.type"
+
 export function isWebsoMessage(value: any): value is WebSocketMessage {
     if(value == null) {
         return false;

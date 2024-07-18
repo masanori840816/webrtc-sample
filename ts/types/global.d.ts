@@ -5,6 +5,7 @@ declare global {
 }
 export interface MainPageApi {
     connect: () => void,
+    sendOffer: () => void,
     send: () => void,
     close: () => void,
     sendDataChannel: () => void,

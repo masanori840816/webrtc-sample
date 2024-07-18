@@ -16,8 +16,8 @@ export class WebRtcController {
             .catch(err => console.error(err));
     }
     public addEvents(sdpMessage: ((data: SdpMessage) => void),
-            candidateMessage: ((data: CandidateMessage) => void),
-            dataChannelMessage: ((data: string | Uint8Array) => void)) {
+        candidateMessage: ((data: CandidateMessage) => void),
+        dataChannelMessage: ((data: string | Uint8Array) => void)) {
         this.sdpMessageEvent = sdpMessage;
         this.candidateMessageEvent = candidateMessage;
         this.dataChannelMessageEvent = dataChannelMessage;
@@ -27,42 +27,43 @@ export class WebRtcController {
             console.error("Local video was null");
             return;
         }
-        if(this.peerConnection == null) {
+        if (this.peerConnection == null) {
             this.createPeerConnection();
-            if(this.peerConnection == null) {
-                console.error("Failed getting peerconnection");                
+            if (this.peerConnection == null) {
+                console.error("Failed getting peerconnection");
                 return;
             }
         }
-        
-        for(const t of this.webcamStream.getTracks()) {
+
+        for (const t of this.webcamStream.getTracks()) {
             this.peerConnection.addTrack(t);
         }
-        
+
     }
     public async handleVideoOffer(sdp: RTCSessionDescription) {
-        if(this.webcamStream == null) {
+        if (this.webcamStream == null) {
             console.error("No webcam source");
             return;
         }
-        if(this.peerConnection == null) {
-            this.createPeerConnection();            
-            if(this.peerConnection == null) {
-                console.error("Failed getting peerconnection");           
+        if (this.peerConnection == null) {
+            this.createPeerConnection();
+            if (this.peerConnection == null) {
+                console.error("Failed getting peerconnection");
                 return;
             }
         }
         await this.peerConnection.setRemoteDescription(sdp);
-        for(const t of this.webcamStream.getTracks()) {
+        for (const t of this.webcamStream.getTracks()) {
             this.peerConnection.addTrack(t);
         }
-        
+
         const answer = await this.peerConnection.createAnswer();
         if (this.peerConnection == null) {
             return;
         }
         this.peerConnection.setLocalDescription(answer);
-        if (this.sdpMessageEvent != null) {
+        if (this.sdpMessageEvent != null &&
+            this.peerConnection.localDescription != null) {
             this.sdpMessageEvent({
                 type: "video-answer",
                 sdp: this.peerConnection.localDescription
@@ -70,13 +71,13 @@ export class WebRtcController {
         }
     }
     public async handleAnswer(sdp: RTCSessionDescription) {
-        if(this.peerConnection == null) {
+        if (this.peerConnection == null) {
             console.error("PeerConnection was null");
             return;
         }
         await this.peerConnection.setRemoteDescription(sdp);
     }
-    public async handleCandidate(data: RTCIceCandidate | null | undefined) {
+    public async handleCandidate(data: RTCIceCandidateInit | null | undefined) {
         if (this.peerConnection == null ||
             data == null) {
             console.error("PeerConnection|Candidate was null");
@@ -88,26 +89,26 @@ export class WebRtcController {
         this.peerConnection = new RTCPeerConnection({
             iceServers: [{
                 urls: `stun:stun.l.google.com:19302`,
-            }]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+            }]
         });
-        
+
         this.peerConnection.oniceconnectionstatechange = (ev) => console.log(ev);
         this.peerConnection.onicegatheringstatechange = (ev) => console.log(ev);
         this.peerConnection.onsignalingstatechange = (ev) => console.log(ev);
         this.peerConnection.onnegotiationneeded = async (ev) => await this.handleNegotiationNeededEvent(ev);
         this.peerConnection.onconnectionstatechange = () => {
-            console.log(this.peerConnection?.connectionState);           
+            console.log(this.peerConnection?.connectionState);
         };
         this.peerConnection.ontrack = (ev) => {
             console.log("received tracks " + ev.track.kind);
-            
+
         };
         this.peerConnection.onicecandidate = ev => {
             if (ev.candidate == null ||
                 this.candidateMessageEvent == null) {
                 return;
             }
-            this.candidateMessageEvent({ type: "new-ice-candidate", candidate: ev.candidate});
+            this.candidateMessageEvent({ type: "new-ice-candidate", candidate: ev.candidate });
         };
         /*this.dataChannels.push(
             dataChannel.createTextDataChannel("sample1", 20, this.peerConnection,
@@ -118,28 +119,32 @@ export class WebRtcController {
                 }));*/
     }
     private async handleNegotiationNeededEvent(ev: Event) {
-        if(this.peerConnection == null) {
+        if (this.peerConnection == null) {
             return;
         }
-        try{
-        const offer = await this.peerConnection.createOffer();
-        if (this.peerConnection.signalingState !== "stable") {
-            console.log("-- The connection isn't stable yet; postponing...")
-            return;
-          }
-          await this.peerConnection.setLocalDescription(offer);
-          if(this.sdpMessageEvent == null) {
-            console.warn("No Offer message handlers");
-            return;
-          }
-          console.log("---> Sending the offer to the remote peer");
-          this.sdpMessageEvent({
-            type: "video-offer",
-            sdp: this.peerConnection.localDescription
-          });
-        }catch(err) {
+        try {
+            const offer = await this.peerConnection.createOffer();
+            if (this.peerConnection.signalingState !== "stable") {
+                console.log("-- The connection isn't stable yet; postponing...")
+                return;
+            }
+            await this.peerConnection.setLocalDescription(offer);
+            if (this.sdpMessageEvent == null) {
+                console.warn("No Offer message handlers");
+                return;
+            }
+            console.log("---> Sending the offer to the remote peer");
+            if(this.peerConnection.localDescription == null) {
+                console.error("Local description was null");
+                return;
+            }
+            this.sdpMessageEvent({
+                type: "video-offer",
+                sdp: this.peerConnection.localDescription
+            });
+        } catch (err) {
             console.error(err);
-            
+
         }
     }
 }

@@ -1,9 +1,9 @@
-import { CandidateMessage, SdpMessage, WebsocketMessage } from "./webrtcsample.type";
+import { CandidateMessage, SdpMessage, WebSocketMessage } from "./webrtcsample.type";
 import * as domains from "./appDomains";
 
 export class WebSockets {
     private ws: WebSocket|null = null;
-    private onReceived: ((data: WebsocketMessage|SdpMessage|CandidateMessage) => void) | null = null;
+    private onReceived: ((data: WebSocketMessage|SdpMessage|CandidateMessage) => void) | null = null;
     public connect() {
         const wsUrl = domains.getWebSocketAddress();
         const userElm = document.getElementById("user_name") as HTMLInputElement;
@@ -25,10 +25,10 @@ export class WebSockets {
         };
         
     }
-    public addEvents(onReceived: (data: WebsocketMessage|SdpMessage|CandidateMessage) => void) {
+    public addEvents(onReceived: (data: WebSocketMessage|SdpMessage|CandidateMessage) => void) {
         this.onReceived = onReceived;
     }
-    public sendMessage(message: WebsocketMessage|SdpMessage|CandidateMessage) {
+    public sendMessage(message: WebSocketMessage|SdpMessage|CandidateMessage) {
         console.log("sendmessage " + message);
         
         if (this.ws == null) {

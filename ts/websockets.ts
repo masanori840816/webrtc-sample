@@ -28,9 +28,7 @@ export class WebSockets {
     public addEvents(onReceived: (data: WebSocketMessage|SdpMessage|CandidateMessage) => void) {
         this.onReceived = onReceived;
     }
-    public sendMessage(message: WebSocketMessage|SdpMessage|CandidateMessage) {
-        console.log("sendmessage " + message);
-        
+    public sendMessage(message: WebSocketMessage|SdpMessage|CandidateMessage) {        
         if (this.ws == null) {
             return;
         }

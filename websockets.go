@@ -18,10 +18,6 @@ var (
 	connections []connectionState
 )
 
-type websocketMessage struct {
-	MessageType string `json:"messageType"`
-	Data        string `json:"data"`
-}
 type connectionState struct {
 	userName  string
 	websocket *threadSafeWriter

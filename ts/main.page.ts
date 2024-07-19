@@ -36,19 +36,15 @@ window.Page = {
     sendOffer() {
         webrtc?.connect();
     },
-    send() {
-        console.log("send " + (websockets != null));
-        
+    send() {        
         if(websockets != null) {
             const messageElm = document.getElementById("message") as HTMLInputElement;
             websockets.sendMessage({type: "text", data: messageElm.value ?? "empty"});
         }
     },
     close() {
-        if(websockets != null) {
-            websockets.close();
-        }
-
+        webrtc?.close();
+        websockets?.close();
     },
     sendDataChannel() {
 

@@ -88,6 +88,10 @@ export class WebRtcController {
         }        
         await this.peerConnection.addIceCandidate(data);
     }
+    public close() {
+        this.peerConnection?.close();
+        this.peerConnection = null;
+    }
     private createPeerConnection() {
         this.peerConnection = new RTCPeerConnection({
             iceServers: [{

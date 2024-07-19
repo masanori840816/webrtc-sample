@@ -1,7 +1,9 @@
 import { WebSockets } from "./websockets";
 import * as webSocketMessage from "./webrtcsample.type";
 import { WebRtcController } from "./webrtc.controller";
+import { MainView } from "./main.view";
 
+const view = new MainView();
 let websockets: WebSockets|null = null;
 let webrtc: WebRtcController|null = null;
 window.Page = {
@@ -23,9 +25,11 @@ window.Page = {
                 webrtc?.handleCandidate(data.candidate);
             }
         });
+        view.setLocalVideo();
         webrtc.init();
         webrtc.addEvents((data) => websockets?.sendMessage(data),
         (data) => websockets?.sendMessage(data),
+        (stream) => view.setRemoteVideo(stream),
         (data) => console.log(data));
         websockets.connect();
     },

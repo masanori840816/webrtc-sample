@@ -8,6 +8,7 @@ export class WebRtcController {
 
     private sdpMessageEvent: ((data: SdpMessage) => void) | null = null;
     private candidateMessageEvent: ((data: CandidateMessage) => void) | null = null;
+    private remoteTrackEvent: ((stream: MediaStream) => void)|null =null;
     private dataChannelMessageEvent: ((data: string | Uint8Array) => void) | null = null;
 
     public init() {
@@ -17,9 +18,11 @@ export class WebRtcController {
     }
     public addEvents(sdpMessage: ((data: SdpMessage) => void),
         candidateMessage: ((data: CandidateMessage) => void),
+        remoteTrackEvent: ((stream: MediaStream) => void),
         dataChannelMessage: ((data: string | Uint8Array) => void)) {
         this.sdpMessageEvent = sdpMessage;
         this.candidateMessageEvent = candidateMessage;
+        this.remoteTrackEvent = remoteTrackEvent;
         this.dataChannelMessageEvent = dataChannelMessage;
     }
     public connect() {
@@ -99,10 +102,7 @@ export class WebRtcController {
         this.peerConnection.onconnectionstatechange = () => {
             console.log(this.peerConnection?.connectionState);
         };
-        this.peerConnection.ontrack = (ev) => {
-            console.log("received tracks " + ev.track.kind);
-
-        };
+        this.peerConnection.ontrack = (ev) => this.handleRemoteTrackEvent(ev);
         this.peerConnection.onicecandidate = ev => {
             if (ev.candidate == null ||
                 this.candidateMessageEvent == null) {
@@ -146,5 +146,12 @@ export class WebRtcController {
             console.error(err);
 
         }
+    }
+    private handleRemoteTrackEvent(ev: RTCTrackEvent) {
+        if(this.remoteTrackEvent == null || ev.streams[0] == null ||
+            ev.track.kind !== "video") {
+            return;
+        }
+        this.remoteTrackEvent(ev.streams[0]);
     }
 }

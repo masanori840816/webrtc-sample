@@ -43,7 +43,7 @@ export class WebRtcController {
         }
 
     }
-    public async handleVideoOffer(sdp: RTCSessionDescription) {
+    public async handleVideoOffer(sdp: RTCSessionDescription) {        
         if (this.webcamStream == null) {
             console.error("No webcam source");
             return;
@@ -55,7 +55,7 @@ export class WebRtcController {
                 return;
             }
         }
-        await this.peerConnection.setRemoteDescription(sdp);
+        await this.peerConnection.setRemoteDescription(sdp);        
         for (const t of this.webcamStream.getTracks()) {
             this.peerConnection.addTrack(t);
         }
@@ -64,7 +64,7 @@ export class WebRtcController {
         if (this.peerConnection == null) {
             return;
         }
-        this.peerConnection.setLocalDescription(answer);
+        await this.peerConnection.setLocalDescription(answer);        
         if (this.sdpMessageEvent != null &&
             this.peerConnection.localDescription != null) {
             this.sdpMessageEvent({
@@ -77,7 +77,7 @@ export class WebRtcController {
         if (this.peerConnection == null) {
             console.error("PeerConnection was null");
             return;
-        }
+        }        
         await this.peerConnection.setRemoteDescription(sdp);
     }
     public async handleCandidate(data: RTCIceCandidateInit | null | undefined) {
@@ -85,7 +85,7 @@ export class WebRtcController {
             data == null) {
             console.error("PeerConnection|Candidate was null");
             return;
-        }
+        }        
         await this.peerConnection.addIceCandidate(data);
     }
     private createPeerConnection() {
@@ -147,11 +147,17 @@ export class WebRtcController {
 
         }
     }
-    private handleRemoteTrackEvent(ev: RTCTrackEvent) {
-        if(this.remoteTrackEvent == null || ev.streams[0] == null ||
-            ev.track.kind !== "video") {
+    private handleRemoteTrackEvent(ev: RTCTrackEvent) {        
+        if(this.remoteTrackEvent == null) {
             return;
         }
-        this.remoteTrackEvent(ev.streams[0]);
+        if(ev.streams[0] == null) {
+            const tracks = this.peerConnection?.getReceivers()?.map(r => r.track);
+            if(tracks != null) {
+                this.remoteTrackEvent(new MediaStream(tracks));
+            }
+        } else if(ev.track.kind) {
+            this.remoteTrackEvent(ev.streams[0]);
+        }        
     }
 }

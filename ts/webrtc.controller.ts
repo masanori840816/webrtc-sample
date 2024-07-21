@@ -37,11 +37,6 @@ export class WebRtcController {
                 return;
             }
         }
-
-        for (const t of this.webcamStream.getTracks()) {
-            this.peerConnection.addTrack(t);
-        }
-
     }
     public async handleVideoOffer(sdp: RTCSessionDescription) {        
         if (this.webcamStream == null) {
@@ -56,10 +51,7 @@ export class WebRtcController {
             }
         }
         await this.peerConnection.setRemoteDescription(sdp);        
-        for (const t of this.webcamStream.getTracks()) {
-            this.peerConnection.addTrack(t);
-        }
-
+        
         const answer = await this.peerConnection.createAnswer();
         if (this.peerConnection == null) {
             return;
@@ -93,6 +85,9 @@ export class WebRtcController {
         this.peerConnection = null;
     }
     private createPeerConnection() {
+        if(this.webcamStream == null) {
+            return;
+        }
         this.peerConnection = new RTCPeerConnection({
             iceServers: [{
                 urls: `stun:stun.l.google.com:19302`,
@@ -114,6 +109,9 @@ export class WebRtcController {
             }
             this.candidateMessageEvent({ type: "new-ice-candidate", data: JSON.stringify(ev.candidate) });
         };
+        for (const t of this.webcamStream.getTracks()) {
+            this.peerConnection.addTrack(t);
+        }
         /*this.dataChannels.push(
             dataChannel.createTextDataChannel("sample1", 20, this.peerConnection,
                 (message) => {
@@ -155,6 +153,8 @@ export class WebRtcController {
         if(this.remoteTrackEvent == null) {
             return;
         }
+        console.log("Remote track");
+        
         if(ev.streams[0] == null) {
             const tracks = this.peerConnection?.getReceivers()?.map(r => r.track);
             if(tracks != null) {

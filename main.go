@@ -24,8 +24,10 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	serverUrl := "https://goapp.sample.jp/webrtc"
-	target := "/webrtc"
+	//serverUrl := "https://goapp.sample.jp/webrtc"
+	//target := "/webrtc"
+	serverUrl := "http://localhost:8083"
+	target := ""
 
 	http.Handle(fmt.Sprintf("%s/css/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
 	http.Handle(fmt.Sprintf("%s/js/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))

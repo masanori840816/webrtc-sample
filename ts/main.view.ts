@@ -7,7 +7,10 @@ export class MainView {
     }
     public setLocalVideo() {
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => this.localVideoElm.srcObject = stream)
+            .then(stream => {
+                this.localVideoElm.srcObject = stream;
+                this.localVideoElm.autoplay = true;
+            })
             .catch(err => console.error(err));
     }
     public setRemoteVideo(stream: MediaStream) {

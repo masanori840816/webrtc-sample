@@ -13,8 +13,9 @@
         <button onclick="Page.sendDataChannel()">Send by DataChannel</button>
         <button onclick="Page.close()">Close</button>
         <div id="received_message"></div>
-        <video id="local_video" muted autoplay>Video stream not available.</video>
+        <video id="local_video" muted>Video stream not available.</video>
         <video id="remote_video" muted autoplay>Video stream not available.</video>
         <script src="{{.}}/js/main.page.js"></script>
+        <script>Page.init();</script>
     </body>
 </html>

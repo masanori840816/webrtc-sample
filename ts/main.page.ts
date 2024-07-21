@@ -7,9 +7,13 @@ const view = new MainView();
 let websockets: WebSockets|null = null;
 let webrtc: WebRtcController|null = null;
 window.Page = {
+    init() {
+        view.setLocalVideo();
+        webrtc = new WebRtcController();
+        webrtc.init();
+    },
     connect() {
         websockets = new WebSockets();
-        webrtc = new WebRtcController();
         websockets.addEvents((data) => {
             if(webSocketMessage.isWebsoMessage(data)) {
                 console.log("websockmessage");
@@ -17,17 +21,15 @@ window.Page = {
                 console.log(data);
             } else if(webSocketMessage.isSdpMessage(data)) {
                 if(data.type === "video-offer") {
-                    webrtc?.handleVideoOffer(data.sdp);
+                    webrtc?.handleVideoOffer(JSON.parse(data.data));
                 }else if(data.type === "video-answer") {
-                    webrtc?.handleAnswer(data.sdp);
+                    webrtc?.handleAnswer(JSON.parse(data.data));
                 }
             } else if(webSocketMessage.isCandidateMessage(data)) {
-                webrtc?.handleCandidate(data.candidate);
+                webrtc?.handleCandidate(JSON.parse(data.data));
             }
         });
-        view.setLocalVideo();
-        webrtc.init();
-        webrtc.addEvents((data) => websockets?.sendMessage(data),
+        webrtc?.addEvents((data) => websockets?.sendMessage(data),
         (data) => websockets?.sendMessage(data),
         (stream) => view.setRemoteVideo(stream),
         (data) => console.log(data));

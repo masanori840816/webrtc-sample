@@ -4,11 +4,11 @@ export type WebSocketMessage = {
 }
 export type SdpMessage = {
     type: "video-offer" | "video-answer",
-    sdp: RTCSessionDescription
+    data: string
 }
 export type CandidateMessage = {
     type: "new-ice-candidate",
-    candidate: RTCIceCandidateInit|null
+    data: string
 }
 export function isWebsoMessage(value: any): value is WebSocketMessage {
     if(value == null) {
@@ -23,7 +23,7 @@ export function isSdpMessage(value: any): value is SdpMessage {
     if(value == null) {
         return false;
     }
-    if(("type" in value && "sdp" in value) === false) {
+    if(("type" in value && "data" in value) === false) {
         return false;
     }
     return (value["type"] === "video-offer" || value["type"] === "video-answer");
@@ -32,7 +32,7 @@ export function isCandidateMessage(value: any): value is CandidateMessage {
     if(value == null) {
         return false;
     }
-    if(("type" in value && "candidate" in value) === false) {
+    if(("type" in value && "data" in value) === false) {
         return false;
     }
     return (value["type"] === "new-ice-candidate");

@@ -4,6 +4,7 @@ declare global {
     };
 }
 export interface MainPageApi {
+    init: () => void,
     connect: () => void,
     sendOffer: () => void,
     send: () => void,

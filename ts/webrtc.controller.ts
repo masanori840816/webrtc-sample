@@ -69,7 +69,7 @@ export class WebRtcController {
             this.peerConnection.localDescription != null) {
             this.sdpMessageEvent({
                 type: "video-answer",
-                sdp: this.peerConnection.localDescription
+                data: JSON.stringify(this.peerConnection.localDescription)
             });
         }
     }
@@ -112,7 +112,7 @@ export class WebRtcController {
                 this.candidateMessageEvent == null) {
                 return;
             }
-            this.candidateMessageEvent({ type: "new-ice-candidate", candidate: ev.candidate });
+            this.candidateMessageEvent({ type: "new-ice-candidate", data: JSON.stringify(ev.candidate) });
         };
         /*this.dataChannels.push(
             dataChannel.createTextDataChannel("sample1", 20, this.peerConnection,
@@ -144,7 +144,7 @@ export class WebRtcController {
             }
             this.sdpMessageEvent({
                 type: "video-offer",
-                sdp: this.peerConnection.localDescription
+                data: JSON.stringify(this.peerConnection.localDescription)
             });
         } catch (err) {
             console.error(err);

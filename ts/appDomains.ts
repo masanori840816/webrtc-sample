@@ -10,7 +10,6 @@ export function getWebSocketAddress() {
         return `wss://${location.hostname}${port}/webrtc/websocket`;
     }
     return "ws://localhost:8083/websocket";
-    //return `ws://${location.hostname}${port}/webrtc/websocket`;
 }
 export function getBaseAddress() {
     let port = location.port;

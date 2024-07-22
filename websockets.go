@@ -40,6 +40,11 @@ func NewWebRTCConnection() *WebRTCConnection {
 		trackLocals: map[string]*webrtc.TrackLocalStaticRTP{},
 	}
 }
+func (webrtcConn *WebRTCConnection) DispatchKeyFrames() {
+	for range time.NewTicker(time.Second * 3).C {
+		webrtcConn.dispatchKeyFrame()
+	}
+}
 func (webrtcConn *WebRTCConnection) websocketHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := getParam(r, "user")
 	if err != nil {
@@ -239,7 +244,6 @@ func (webrtcConn *WebRTCConnection) signalPeerConnections() {
 
 		return
 	}
-	log.Println("attempt")
 	for syncAttempt := 0; ; syncAttempt++ {
 		if syncAttempt == 25 {
 			// Release the lock and attempt a sync in 3 seconds. We might be blocking a RemoveTrack or AddTrack

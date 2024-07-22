@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 type templateHandler struct {
@@ -35,10 +34,6 @@ func main() {
 	http.HandleFunc(fmt.Sprintf("%s/websocket", target), conn.websocketHandler)
 	http.Handle("/", &templateHandler{filename: "index.html", serverUrl: serverUrl})
 
-	go func() {
-		for range time.NewTicker(time.Second * 3).C {
-			conn.dispatchKeyFrame()
-		}
-	}()
+	go conn.DispatchKeyFrames()
 	log.Fatal(http.ListenAndServe("localhost:8083", nil))
 }

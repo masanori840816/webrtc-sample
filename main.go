@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 type templateHandler struct {
@@ -28,11 +29,17 @@ func main() {
 	//target := "/webrtc"
 	serverUrl := "http://localhost:8083"
 	target := ""
-
+	conn := NewWebRTCConnection()
 	http.Handle(fmt.Sprintf("%s/css/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
 	http.Handle(fmt.Sprintf("%s/js/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
 
-	http.HandleFunc(fmt.Sprintf("%s/websocket", target), websocketHandler)
+	http.HandleFunc(fmt.Sprintf("%s/websocket", target), conn.websocketHandler)
 	http.Handle("/", &templateHandler{filename: "index.html", serverUrl: serverUrl})
+
+	go func() {
+		for range time.NewTicker(time.Second * 3).C {
+			conn.dispatchKeyFrame()
+		}
+	}()
 	log.Fatal(http.ListenAndServe("localhost:8083", nil))
 }

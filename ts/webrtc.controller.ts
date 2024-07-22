@@ -50,6 +50,8 @@ export class WebRtcController {
                 return;
             }
         }
+        console.log("handleoffer");
+        
         await this.peerConnection.setRemoteDescription(sdp);        
         
         const answer = await this.peerConnection.createAnswer();
@@ -59,6 +61,8 @@ export class WebRtcController {
         await this.peerConnection.setLocalDescription(answer);        
         if (this.sdpMessageEvent != null &&
             this.peerConnection.localDescription != null) {
+            console.log("localdesc");
+            
             this.sdpMessageEvent({
                 type: "video-answer",
                 data: JSON.stringify(this.peerConnection.localDescription)
@@ -77,7 +81,9 @@ export class WebRtcController {
             data == null) {
             console.error("PeerConnection|Candidate was null");
             return;
-        }        
+        }
+        console.log(data);
+        
         await this.peerConnection.addIceCandidate(data);
     }
     public close() {
@@ -97,7 +103,7 @@ export class WebRtcController {
         this.peerConnection.oniceconnectionstatechange = (ev) => console.log(ev);
         this.peerConnection.onicegatheringstatechange = (ev) => console.log(ev);
         this.peerConnection.onsignalingstatechange = (ev) => console.log(ev);
-        this.peerConnection.onnegotiationneeded = async (ev) => await this.handleNegotiationNeededEvent(ev);
+        //this.peerConnection.onnegotiationneeded = async (ev) => await this.handleNegotiationNeededEvent(ev);
         this.peerConnection.onconnectionstatechange = () => {
             console.log(this.peerConnection?.connectionState);
         };
@@ -107,11 +113,17 @@ export class WebRtcController {
                 this.candidateMessageEvent == null) {
                 return;
             }
+            console.log(ev.candidate);
+            
             this.candidateMessageEvent({ type: "new-ice-candidate", data: JSON.stringify(ev.candidate) });
         };
-        for (const t of this.webcamStream.getTracks()) {
-            this.peerConnection.addTrack(t);
-        }
+        this.webcamStream.getTracks().forEach(track => {
+            /*if(track.kind === "video"){
+                this.peerConnection!.addTransceiver("video", {direction:"recvonly"});
+            }*/
+            this.peerConnection!.addTrack(track, this.webcamStream!);
+        });
+        
         /*this.dataChannels.push(
             dataChannel.createTextDataChannel("sample1", 20, this.peerConnection,
                 (message) => {
@@ -121,6 +133,8 @@ export class WebRtcController {
                 }));*/
     }
     private async handleNegotiationNeededEvent(ev: Event) {
+        console.log("Handlenegotiation");
+        
         if (this.peerConnection == null) {
             return;
         }
@@ -149,18 +163,19 @@ export class WebRtcController {
 
         }
     }
-    private handleRemoteTrackEvent(ev: RTCTrackEvent) {        
+    private handleRemoteTrackEvent(ev: RTCTrackEvent) {   
+        console.log("Remote track");     
         if(this.remoteTrackEvent == null) {
             return;
         }
-        console.log("Remote track");
+        console.log(ev.track.kind);
         
         if(ev.streams[0] == null) {
             const tracks = this.peerConnection?.getReceivers()?.map(r => r.track);
             if(tracks != null) {
                 this.remoteTrackEvent(new MediaStream(tracks));
             }
-        } else if(ev.track.kind) {
+        } else if(ev.track.kind === "video") {
             this.remoteTrackEvent(ev.streams[0]);
         }        
     }

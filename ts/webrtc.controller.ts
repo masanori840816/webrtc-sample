@@ -96,14 +96,17 @@ export class WebRtcController {
         }
         this.peerConnection = new RTCPeerConnection({
             iceServers: [{
-                urls: `stun:stun.l.google.com:19302`,
-            }]
+                urls: "turn:goapp.sample.jp:3478?transport=tcp",
+                username: "username1",
+                credential: "password1",
+            }],
+            iceTransportPolicy: "relay"
         });
 
         this.peerConnection.oniceconnectionstatechange = (ev) => console.log(ev);
         this.peerConnection.onicegatheringstatechange = (ev) => console.log(ev);
         this.peerConnection.onsignalingstatechange = (ev) => console.log(ev);
-        //this.peerConnection.onnegotiationneeded = async (ev) => await this.handleNegotiationNeededEvent(ev);
+        this.peerConnection.onnegotiationneeded = async (ev) => await this.handleNegotiationNeededEvent(ev);
         this.peerConnection.onconnectionstatechange = () => {
             console.log(this.peerConnection?.connectionState);
         };

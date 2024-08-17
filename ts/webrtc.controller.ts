@@ -51,6 +51,8 @@ export class WebRtcController {
             }
         }
         console.log("handleoffer");
+        console.log(sdp);
+        
         
         await this.peerConnection.setRemoteDescription(sdp);        
         
@@ -96,7 +98,7 @@ export class WebRtcController {
         }
         this.peerConnection = new RTCPeerConnection({
             iceServers: [{
-                urls: "turn:goapp.sample.jp:3478?transport=tcp",
+                urls: "turn:goapp.sample.jp:3478",
                 username: "username1",
                 credential: "password1",
             }],

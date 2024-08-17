@@ -17,10 +17,14 @@ func NewPeerConnection() (*webrtc.PeerConnection, error) {
 		ICEServers: []webrtc.ICEServer{
 			{
 				URLs: []string{
-					"stun:stun.l.google.com:19302",
+					"turn:goapp.sample.jp:3478",
 				},
+				Username:       "username1",
+				Credential:     "password1",
+				CredentialType: webrtc.ICECredentialTypePassword,
 			},
 		},
+		ICETransportPolicy: webrtc.ICETransportPolicyRelay,
 	})
 	if err != nil {
 		return nil, err

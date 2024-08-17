@@ -31,7 +31,7 @@ func main() {
 	http.Handle(fmt.Sprintf("%s/js/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
 
 	http.HandleFunc(fmt.Sprintf("%s/websocket", target), webrtcConn.websocketHandler)
-	http.Handle("/", &templateHandler{filename: "index2.html", serverUrl: serverUrl})
+	http.Handle("/", &templateHandler{filename: "index.html", serverUrl: serverUrl})
 	go webrtcConn.DispatchKeyFrames()
 	log.Fatal(http.ListenAndServe("localhost:8083", nil))
 }

@@ -34,6 +34,7 @@ func NewWebRTCConnection() *WebRTCConnection {
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
+			CheckOrigin:     func(r *http.Request) bool { return true },
 		},
 		listLock:    sync.RWMutex{},
 		connections: make([]ConnectionState, 0),
@@ -53,11 +54,10 @@ func (webrtcConn *WebRTCConnection) websocketHandler(w http.ResponseWriter, r *h
 	}
 	unsafeConn, err := webrtcConn.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Println("upgrade:", err)
 		return
 	}
 	conn := &threadSafeWriter{unsafeConn, sync.Mutex{}}
-	// Close the connection when the for-loop operation is finished.
 	defer conn.Close()
 	peerConnection, err := NewPeerConnection()
 	if err != nil {
@@ -69,13 +69,17 @@ func (webrtcConn *WebRTCConnection) websocketHandler(w http.ResponseWriter, r *h
 		if i == nil {
 			return
 		}
-		j, _ := json.Marshal(i)
-		message := websocketMessage{Type: "new-ice-candidate", Data: string(j)}
-		conn.Lock()
-		defer conn.Unlock()
-		err := conn.WriteJSON(message)
+		candidateString, err := json.Marshal(i.ToJSON())
 		if err != nil {
+			log.Println(err)
 			return
+		}
+
+		if writeErr := conn.WriteJSON(&websocketMessage{
+			Type: "new-ice-candidate",
+			Data: string(candidateString),
+		}); writeErr != nil {
+			log.Println(writeErr)
 		}
 	})
 	peerConnection.OnConnectionStateChange(func(p webrtc.PeerConnectionState) {
@@ -90,13 +94,14 @@ func (webrtcConn *WebRTCConnection) websocketHandler(w http.ResponseWriter, r *h
 				log.Printf("RECV ID: %s MID: %s MSID: %s Kind: %s", track.ID(), track.RID(), track.Msid(), track.Kind())
 			}
 		case webrtc.PeerConnectionStateFailed:
-			return
+			if err := peerConnection.Close(); err != nil {
+				log.Print(err)
+			}
 		case webrtc.PeerConnectionStateClosed:
-			return
+			webrtcConn.signalPeerConnections()
 		}
 	})
 	peerConnection.OnTrack(func(t *webrtc.TrackRemote, _ *webrtc.RTPReceiver) {
-		log.Println("Ontrack")
 		trackLocal := webrtcConn.addTrack(t)
 		defer webrtcConn.removeTrack(trackLocal)
 
@@ -116,7 +121,6 @@ func (webrtcConn *WebRTCConnection) websocketHandler(w http.ResponseWriter, r *h
 	webrtcConn.listLock.Lock()
 	webrtcConn.connections = append(webrtcConn.connections, ConnectionState{userName: user, websocket: conn, peerConnection: peerConnection})
 	webrtcConn.listLock.Unlock()
-
 	webrtcConn.signalPeerConnections()
 	message := &websocketMessage{}
 	for {
@@ -128,7 +132,6 @@ func (webrtcConn *WebRTCConnection) websocketHandler(w http.ResponseWriter, r *h
 			log.Println(err.Error())
 			return
 		}
-
 		switch message.Type {
 		case "video-answer":
 			answer := webrtc.SessionDescription{}
@@ -141,9 +144,6 @@ func (webrtcConn *WebRTCConnection) websocketHandler(w http.ResponseWriter, r *h
 				return
 			}
 		case "new-ice-candidate":
-
-			log.Println("candidate")
-			log.Println(message.Data)
 			candidate := webrtc.ICECandidateInit{}
 			if err := json.Unmarshal([]byte(message.Data), &candidate); err != nil {
 				log.Println(err)
@@ -281,20 +281,16 @@ func (webrtcConn *WebRTCConnection) addTrack(t *webrtc.TrackRemote) *webrtc.Trac
 		webrtcConn.listLock.Unlock()
 		webrtcConn.signalPeerConnections()
 	}()
-	log.Println(t.Kind())
-
-	// Create a new TrackLocal with the same codec as our incoming
 	trackLocal, err := webrtc.NewTrackLocalStaticRTP(t.Codec().RTPCodecCapability, t.ID(), t.StreamID())
 	if err != nil {
-		log.Println("newtraklocal err")
 		panic(err)
 	}
+
 	webrtcConn.trackLocals[t.ID()] = trackLocal
-	log.Println("addtracl next")
+
 	return trackLocal
 }
 
-// Remove from list of tracks and fire renegotation for all PeerConnections
 func (webrtcConn *WebRTCConnection) removeTrack(t *webrtc.TrackLocalStaticRTP) {
 	webrtcConn.listLock.Lock()
 	defer func() {

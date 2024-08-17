@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 type templateHandler struct {
@@ -27,16 +26,12 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	serverUrl := "https://goapp.sample.jp/webrtc"
 	target := "/webrtc"
-
+	webrtcConn := NewWebRTCConnection()
 	http.Handle(fmt.Sprintf("%s/css/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
 	http.Handle(fmt.Sprintf("%s/js/", target), http.StripPrefix(target, http.FileServer(http.Dir("templates"))))
 
-	http.HandleFunc(fmt.Sprintf("%s/websocket", target), websocketHandler)
+	http.HandleFunc(fmt.Sprintf("%s/websocket", target), webrtcConn.websocketHandler)
 	http.Handle("/", &templateHandler{filename: "index2.html", serverUrl: serverUrl})
-	go func() {
-		for range time.NewTicker(time.Second * 3).C {
-			dispatchKeyFrame()
-		}
-	}()
+	go webrtcConn.DispatchKeyFrames()
 	log.Fatal(http.ListenAndServe("localhost:8083", nil))
 }
